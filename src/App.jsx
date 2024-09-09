@@ -2,39 +2,95 @@ import { useEffect, useState } from 'react'
 import { TodoProvider } from "./Context"
 import TodoForm from './Components/TodoFrom'
 import TodoItem from './Components/TodoItem'
+const url="http://localhost:5000";
 
 function App() {
 
   const [todos,setTodos]=useState([]);
 
   const addTodo=(todo)=>{
-    setTodos((prev)=>[{id:Date.now(),...todo},...prev])
+    // console.log(todo);  
+    const newtodo={taskName:todo.todo,isCompleted:todo.isCompleted}
+    todo=newtodo;
+    const id=Date.now();
+    setTodos((prev)=>[{id:id,...todo},...prev]);
+    console.log(todo);
+    fetch(url,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        id:id,
+        title:todo.taskName,
+        isCompleted:false
+      })
+    })
   }
 
   const updateTodo=(id,todo)=>{
+    console.log(todo);
     setTodos(prev=>prev.map(prevtodo=>prevtodo.id===id?todo:prevtodo))
+    console.log(todo.taskName);
+    fetch(url,{
+      method:"PATCH",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        id:id,
+        title:todo.taskName,
+        isCompleted:todo.isCompleted
+      })
+    })
   }
 
   const deleteTodo=(id)=>{
     setTodos(prev=>prev.filter(prevtodo=>prevtodo.id!==id))
+    fetch(url,{
+      method:"DELETE",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        id:id,
+      })
+    })
   }
   
   const toggleComplete=(id)=>{
-    setTodos(prev=>prev.map(prevtodo=>prevtodo.id===id? {...prevtodo,completed:!prevtodo.completed}:prevtodo))
+    setTodos(prev=>prev.map(prevtodo=>prevtodo.id===id? {...prevtodo,isCompleted:!prevtodo.isCompleted}:prevtodo))
+    fetch(url,{
+      method:"PATCH",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        id:id,
+      })
+    })
   }
 
   //to get item from todos.
   useEffect(()=>{
-    const todos=JSON.parse(localStorage.getItem("todos"));
-    if(todos && todos.length>0){
-      setTodos(todos);
+    async function getData(){
+      const response=await fetch(url);
+      const data=await response.json();
+      if(data){
+        setTodos(data);
+        // localStorage.setItem("todos",JSON.stringify(data));
+      }
     }
+    getData();
+    // if(todos && todos.length>0){
+    //   setTodos(todos);
+    // }
   },[]);
 
   //to save item in todos.
-  useEffect(()=>{
-    localStorage.setItem("todos",JSON.stringify(todos));
-  },[todos]);
+  // useEffect(()=>{
+  //   localStorage.setItem("todos",JSON.stringify(todos));
+  // },[todos]);
 
   return (
     <TodoProvider value={{todos,addTodo,updateTodo,deleteTodo,toggleComplete

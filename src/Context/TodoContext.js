@@ -4,8 +4,8 @@ export const TodoContext=React.createContext({
     todos:[
         {
             id:1,
-            title:'Todo msg',
-            completed:false
+            taskName:'Todo msg',
+            isCompleted:false
         },
         
     ],
